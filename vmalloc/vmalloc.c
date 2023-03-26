@@ -117,5 +117,6 @@ void *vmalloc(size_t size)
     set_next_block(next_header, leftover);
 
     //printf("%p", min_free_size);
+    //random comments
     return (min_free_header+1);
 }
