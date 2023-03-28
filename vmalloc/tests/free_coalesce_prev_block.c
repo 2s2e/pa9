@@ -18,6 +18,7 @@ int main()
     assert(ptr1 != NULL);
     assert((uint32_t)(ptr1 - start) == 2624);
 
+    vminfo();
 
     vmdestroy();
 }

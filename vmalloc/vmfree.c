@@ -1,5 +1,6 @@
 #include "vm.h"
 #include "vmlib.h"
+#include <stdio.h>
 
 /**
  * The vmfree() function frees the memory space pointed to by ptr,
@@ -70,6 +71,7 @@ void vmfree(void *ptr)
 {
     struct block_header* block_ptr = (struct block_header*)ptr;
     block_ptr -= 1;
+
     //NULL
     if(block_ptr->size_status == 0) {
         return;
@@ -88,22 +90,32 @@ void vmfree(void *ptr)
     struct block_header* next_block = block_ptr + (cur_ptr_size / 4);
 
     //if the next block is free, coalesce it
-    if(next_block->size_status != VM_ENDMARK && !f_check_busy(next_block)) {
+    if(!f_check_end(next_block) && !f_check_busy(next_block)) {
+        //printf("%d\n", block_ptr->size_status);
         block_ptr->size_status += BLKSZ(next_block);
-        //f_set_footer(block_ptr);
+        //printf("%d\n", block_ptr->size_status);
+        f_set_footer(block_ptr);
     }
-    else {
-        next_block->size_status |= 0b10;
+    else if(!f_check_end(next_block)){
+        next_block->size_status &= ~(0b10);
     }
+
+    //bug fix, assumed cur_ptr_size would stay constant, didn't take into account prev coalescing
+    cur_ptr_size = BLKSZ(block_ptr);
 
     //if the previous block is free, coalesce it
     if(!f_check_prev_busy(block_ptr)) {
         //get previous footer and footer size
         struct block_footer* prev_footer = (struct block_footer*)block_ptr - 1;
         size_t prev_size = prev_footer->size;
+
         //get the header of the previous block and add the current size
         struct block_header* prev_block = block_ptr - (prev_size / 4);
+
+        //printf("%d\n", BLKSZ(prev_block));
         prev_block->size_status += cur_ptr_size;
+        //printf("%d\n", BLKSZ(prev_block));
+
         //set the new footer
         f_set_footer(prev_block);
         return;

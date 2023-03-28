@@ -46,8 +46,10 @@ void alloc_block(struct block_header *header, size_t true_size) {
 
 void set_next_block(struct block_header *header, size_t leftover) {
     if(leftover == 0) {
-        //we used the entire free space, therefore just set it to occupied
-        header->size_status |= 0b10;
+        if (header->size_status != VM_ENDMARK) {
+            //we used the entire free space, therefore just set it to occupied
+            header->size_status |= 0b10;
+        }
     }
     else {
         //there is more space left, create a new free block
