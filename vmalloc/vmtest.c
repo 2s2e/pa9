@@ -72,12 +72,12 @@ int main()
     //vmload("dumps/ref_image2");
 
     //void *ptr = vmalloc(4); // try calling vmalloc once.
-    dump_ref("dumps/image1");
-    dump_ref("dumps/ref_image1");
-    dump_ref("dumps/image2");
-    dump_ref("dumps/ref_image2");
-    dump_ref("dumps/image3");
-    dump_ref("dumps/ref_image3");
+    // dump_ref("dumps/image1");
+    // dump_ref("dumps/ref_image1");
+    // dump_ref("dumps/image2");
+    // dump_ref("dumps/ref_image2");
+    // dump_ref("dumps/image3");
+    // dump_ref("dumps/ref_image3");
 
     //vminfo(); // print out how the heap looks like at this point in time for easy visualization
     //vmdump("dumps/out"); // dump the state of the heap to a file, optional

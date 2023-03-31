@@ -29,11 +29,12 @@
 /* The size_status value of the end mark block */
 #define VM_ENDMARK 0x1
 
-#define VM_BLKSZMASK 0xFFFFFFFC
+#define VM_BLKSZMASK 0x00FFFFFC
 #define VM_BUSY 0x00000001
 #define VM_PREVBUSY 0x00000002
 
 #define BLKSZ(b) ((b)->size_status & VM_BLKSZMASK)
+#define BLKID(b) ((b)->size_status >> 24)
 #define ROUND_UP(N, S) ((((N) + (S)-1) / (S)) * (S))
 
 /**
