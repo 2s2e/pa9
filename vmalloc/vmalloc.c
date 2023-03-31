@@ -14,6 +14,8 @@
 #define ROUND_UP(N, S) ((((N) + (S)-1) / (S)) * (S))
  */
 
+char next_id = 0;
+
 int check_end(struct block_header *header) {
     if((header->size_status >> 3 == 0) && ((header->size_status & 1U) == 1)) {
         return 1;
