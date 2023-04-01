@@ -34,6 +34,9 @@ void vmdump(const char *filename);
 /* Load a heap from a dump file */
 int vmload(const char *filename);
 
+void* dereference(struct v_pointer v);
+
+
 
 
 #endif /* VMLIB_H */

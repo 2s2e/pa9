@@ -83,6 +83,7 @@ struct v_pointer {
  */
 extern struct block_header *heapstart;
 extern int heapsize;
+extern FILE* fp;
 
 
 #endif /* VM_H */

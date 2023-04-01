@@ -37,9 +37,11 @@ int main()
     // initializating an empty heap 
     //vmload("dumps/ref_image2");
 
-    struct v_pointer ptr = vmalloc(4); // try calling vmalloc once.
+    struct v_pointer ptr = vmalloc(2000); // try calling vmalloc once.
 
-    struct v_pointer ptr2 = vmalloc(8);
+    struct v_pointer ptr2 = vmalloc(2000);
+
+    struct v_pointer ptr3 = vmalloc(2000);
 
     vminfo(); // print out how the heap looks like at this point in time for easy visualization
 
