@@ -28,6 +28,8 @@
 
 /* Global pointer to the start of the heap */
 struct block_header *heapstart = NULL;
+FILE* fp;
+
 static void *_vminit_mmap_start = NULL;
 static size_t _vminit_mmap_size;
 
@@ -135,6 +137,8 @@ static struct block_header *init_heap(void *start, size_t sz)
 
     endmark->size_status = VM_ENDMARK;
 
+    
+
     return header;
 }
 
@@ -143,6 +147,8 @@ void vmdestroy()
     munmap(_vminit_mmap_start, _vminit_mmap_size);
     _vminit_mmap_size = 0;
     _vminit_mmap_start = NULL;
+
+    fclose(fp);
 }
 
 void arch_assert()
@@ -179,6 +185,9 @@ int vminit(size_t sz)
     }
     heapstart = init_heap(_vminit_mmap_start, _vminit_mmap_size);
     dbprintf("heap initialization done.\n");
+    fp = fopen("prog.swapfile", "w+");
+
+
     return _vminit_mmap_size;
 }
 
@@ -210,6 +219,8 @@ int vmload(const char *filename)
     }
     heapstart = (struct block_header *)((char *)_vminit_mmap_start + sizeof(struct block_header));
     dbprintf("heap initialization done.\n");
+    fp = fopen("prog.swapfile", "w+");
+
     return _vminit_mmap_size;
 }
 

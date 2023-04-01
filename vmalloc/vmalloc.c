@@ -16,6 +16,8 @@
 
 char next_id = 0;
 
+
+
 int check_end(struct block_header *header) {
     if((header->size_status >> 3 == 0) && ((header->size_status & 1U) == 1)) {
         return 1;
@@ -60,7 +62,11 @@ void set_next_block(struct block_header *header, size_t leftover) {
     }
 }
 
-void *vmalloc(size_t size)
+void* dereference(struct v_pointer v) {
+    return v.addr;
+}
+
+struct v_pointer vmalloc(size_t size)
 {
 
     /*
@@ -69,9 +75,19 @@ void *vmalloc(size_t size)
     one for setting allocation bit
     one for setting the previous status bit
     */
-    if(size == 0) {
-        return NULL;
+    if(next_id == 255) {
+        printf("Maximum number of allocs reached");
+        exit(1);
     }
+
+    if(size == 0) {
+        struct v_pointer toRet;
+        toRet.addr = NULL;
+        toRet.id = 0;
+        return toRet;
+    }
+
+
 
     //main_ptr will be our traversing pointer
     struct block_header *main_ptr = heapstart;
@@ -106,7 +122,13 @@ void *vmalloc(size_t size)
     }
 
     //we do not have a free block big enough
-    if(min_free_header == NULL) {return NULL;}
+    if(min_free_header == NULL) {
+        //this is where the fun beginss
+        struct v_pointer toRet;
+        toRet.addr = NULL;
+        toRet.id = 0;
+        return toRet;
+    }
 
     //the true size of our block to allocate, header + payload rounded up 8
     size_t true_size = ROUND_UP(4+size, 8);
@@ -122,5 +144,9 @@ void *vmalloc(size_t size)
 
     //printf("%p", min_free_size);
     //random comments
-    return (min_free_header+1);
+
+    struct v_pointer toRet;
+    toRet.addr = min_free_header+1;
+    toRet.id = 0;
+    return toRet;
 }

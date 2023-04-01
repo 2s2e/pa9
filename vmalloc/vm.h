@@ -19,6 +19,7 @@
 
 #include <stddef.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 /* Undefine memory allocation functions in stdlib.h */
 #define malloc(x) NULL
@@ -34,7 +35,7 @@
 #define VM_PREVBUSY 0x00000002
 
 #define BLKSZ(b) ((b)->size_status & VM_BLKSZMASK)
-#define BLKID(b) ((b)->size_status >> 24)
+#define BLKID(b) ((char)((b)->size_status >> 24))
 #define ROUND_UP(N, S) ((((N) + (S)-1) / (S)) * (S))
 
 /**
@@ -72,9 +73,16 @@ struct block_footer {
     size_t size;
 };
 
+struct v_pointer {
+    void* addr;
+    char id;
+};
+
 /**
  * Global pointer to the first block in the heap.
  */
 extern struct block_header *heapstart;
+
+
 
 #endif /* VM_H */
