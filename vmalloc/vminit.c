@@ -28,7 +28,9 @@
 
 /* Global pointer to the start of the heap */
 struct block_header *heapstart = NULL;
+int heapsize = 0;
 FILE* fp;
+
 
 static void *_vminit_mmap_start = NULL;
 static size_t _vminit_mmap_size;
@@ -184,6 +186,7 @@ int vminit(size_t sz)
         dbprintf("heap created at %p (%u bytes).\n", _vminit_mmap_start, _vminit_mmap_size);
     }
     heapstart = init_heap(_vminit_mmap_start, _vminit_mmap_size);
+    heapsize = sz;
     dbprintf("heap initialization done.\n");
     fp = fopen("prog.swapfile", "w+");
 

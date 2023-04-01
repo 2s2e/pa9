@@ -82,7 +82,7 @@ struct v_pointer {
  * Global pointer to the first block in the heap.
  */
 extern struct block_header *heapstart;
-
+extern int heapsize;
 
 
 #endif /* VM_H */

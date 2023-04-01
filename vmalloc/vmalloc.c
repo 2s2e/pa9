@@ -39,13 +39,23 @@ int check_prev_busy(struct block_header *header) {
     return 0;
 }
 
-void alloc_block(struct block_header *header, size_t true_size) {
+void alloc_block(struct block_header *header, size_t true_size, char id) {
     //this block is now occupied 
     header->size_status |= 0b1;
 
     //reset the size of our block
     header->size_status &= (0b111);
     header->size_status |= true_size;
+    printf("%d\n", id);
+    size_t int_id = id;
+    printf("%x\n", VM_BLKSZMASK);
+    printf("%x\n", int_id);
+    int_id = int_id << 24;
+    printf("%x\n", int_id);
+
+    header->size_status |= int_id;
+    printf("%x\n", header->size_status & VM_BLKSZMASK);
+    printf("%x\n", BLKSZ(header));
 }
 
 void set_next_block(struct block_header *header, size_t leftover) {
@@ -66,6 +76,10 @@ void* dereference(struct v_pointer v) {
     return v.addr;
 }
 
+// struct v_pointer swap_alloc(size_t size) {
+
+// }
+
 struct v_pointer vmalloc(size_t size)
 {
 
@@ -80,12 +94,14 @@ struct v_pointer vmalloc(size_t size)
         exit(1);
     }
 
-    if(size == 0) {
+    if(size == 0 || size > heapsize - 8) {
         struct v_pointer toRet;
         toRet.addr = NULL;
         toRet.id = 0;
         return toRet;
     }
+
+    
 
 
 
@@ -117,13 +133,17 @@ struct v_pointer vmalloc(size_t size)
         
 
         //# of 4 byte increments between here and the next block
-        int jump_size = (main_ptr->size_status >> 2);
+        int jump_size = (BLKSZ(main_ptr) >> 2);
         main_ptr = (main_ptr+jump_size);   
     }
 
     //we do not have a free block big enough
     if(min_free_header == NULL) {
-        //this is where the fun beginss
+        //this is where the fun begins
+
+
+
+
         struct v_pointer toRet;
         toRet.addr = NULL;
         toRet.id = 0;
@@ -134,7 +154,7 @@ struct v_pointer vmalloc(size_t size)
     size_t true_size = ROUND_UP(4+size, 8);
 
     //allocate that ****
-    alloc_block(min_free_header, true_size);
+    alloc_block(min_free_header, true_size, next_id);
 
     //have a reference point to the next free area
     struct block_header *next_header = (min_free_header+(true_size >> 2));
@@ -147,6 +167,8 @@ struct v_pointer vmalloc(size_t size)
 
     struct v_pointer toRet;
     toRet.addr = min_free_header+1;
-    toRet.id = 0;
+    toRet.id = next_id;
+
+    next_id++;
     return toRet;
 }
