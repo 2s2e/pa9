@@ -75,7 +75,7 @@ void test3() {
     char* p = dereference(ptr);
     printf("%x Value of dereferencing ptr\n", p);
     printf("%d Value of v pointer address\n",((int*)ptr.addr)[0]);
-    p[0] = 'A';
+    p[0] = 's';
     struct v_pointer ptr2 = vmalloc(1000);
     struct v_pointer ptr3 = vmalloc(1000);
     struct v_pointer ptr4 = vmalloc(1000);

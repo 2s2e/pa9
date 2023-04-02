@@ -156,6 +156,8 @@ void add_block_to_file(struct block_header *header) {
 void* dereference(struct v_pointer v) {
     //pointer at whatever location v was originally pointing to
     struct block_header* ptr = v.addr - 1;
+    printf("Dereferencing, v_pointer id is %x, ptr id is %x", v.id, BLKID(ptr));
+    printf("%x Size status before\n", ptr->size_status);
 
     if(BLKID(ptr) == v.id) {
         return v.addr;
@@ -170,9 +172,16 @@ void* dereference(struct v_pointer v) {
     //start at the beginning
     fseek(fp, 0, SEEK_SET);
 
-    while(!feof(fp)) {
+    while(1) {
+        int c = fgetc(fp);
+        if(c == EOF) {
+            break;
+        }
+        fseek(fp, -1, SEEK_CUR);
+
+
         fread(header_buf, sizeof(struct block_header*), 1, fp);
-        printf("%x\n", header_buf->size_status);
+        //printf("%x\n", header_buf->size_status);
 
         char id = BLKID(header_buf);
         size_t size = BLKSZ(header_buf);
