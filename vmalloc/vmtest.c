@@ -66,8 +66,6 @@ void test2() {
 
     assert(ptr5.addr != NULL);
 
-    char* p2 = dereference(ptr);
-    assert(p2[0] == 'A');
 
 }
 

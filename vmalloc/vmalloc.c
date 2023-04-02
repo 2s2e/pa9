@@ -47,10 +47,10 @@ void alloc_block(struct block_header *header, size_t true_size, char id) {
     header->size_status &= (0b111);
     header->size_status |= true_size;
 
+
+    //set the id of the block
     size_t int_id = id;
-
     int_id = int_id << 24;
-
     header->size_status |= int_id;
 
 }
@@ -68,6 +68,56 @@ void set_next_block(struct block_header *header, size_t leftover) {
         header->size_status |= 0b10;
     }
 }
+
+void set_footer(struct block_header *header) {
+    struct block_footer *footer = (struct block_footer*)header + (BLKSZ(header)/4 - 1);
+    footer->size = BLKSZ(header);
+}
+
+void coalesce_next(struct block_header* block_ptr)
+{
+    //NULL
+    if(block_ptr->size_status == 0) {
+        return;
+    }
+    if(check_busy(block_ptr)) {
+        return;
+    }
+
+    size_t cur_ptr_size = BLKSZ(block_ptr);
+
+    //next block header
+    struct block_header* next_block = block_ptr + (cur_ptr_size / 4);
+
+    //if the next block is free, coalesce it
+    if(!check_end(next_block) && !check_busy(next_block)) {
+        //printf("%d\n", block_ptr->size_status);
+        block_ptr->size_status += BLKSZ(next_block);
+
+        //printf("%d\n", block_ptr->size_status);
+        set_footer(block_ptr);
+    }
+    else if(!check_end(next_block)){
+        next_block->size_status &= ~(0b10);
+    }
+
+    set_footer(block_ptr);
+    return;
+
+    /* TODO: PA 6 */
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 void* dereference(struct v_pointer v) {
     return v.addr;
@@ -142,32 +192,46 @@ struct v_pointer swap_alloc(size_t size) {
 
     //our largest block isn't big enough, we will allocate enough space at the start
     if(to_evict == NULL || min_free_size - 4 < size) {
+        //set our block header and block size to correspond to the start
         to_evict = heapstart;
         eviction_size = 0;
 
+        //initialize our main pointer
         main_ptr = to_evict;
         main_ptr += (BLKSZ(main_ptr) >> 2);
 
-
+        //while the space we've evicted isn't big enough, keep on evicting
         while(eviction_size - 4 < size) {
-            add_block_to_file(main_ptr);
+            if(check_busy(main_ptr)) {
+                add_block_to_file(main_ptr);
+            }
             eviction_size += BLKSZ(main_ptr);
             main_ptr += (BLKSZ(main_ptr) >> 2);
         }
     }
     else {
+        //our largest block is big enough, so we can just evict that one block
         add_block_to_file(to_evict);
     }
 
     //the true size of our block to allocate, header + payload rounded up 8
-    size_t true_size = eviction_size;
+    size_t true_size = ROUND_UP(4+size, 8);
 
     //allocate that ****
     alloc_block(to_evict, true_size, next_id);
-        
+    
+    //create our struct
     struct v_pointer toRet;
     toRet.addr = to_evict;
     toRet.id = next_id;
+
+    //don't forget to set up our free blocks
+    size_t leftover = eviction_size - true_size;
+    set_next_block(to_evict, leftover);
+
+    //coalesce in case our block doesn't take up the whole space, we are coalescing the next block
+    coalesce_next(to_evict + (true_size/4));
+
     return toRet;
     
 }
@@ -192,10 +256,6 @@ struct v_pointer vmalloc(size_t size)
         toRet.id = 0;
         return toRet;
     }
-
-    
-
-
 
     //main_ptr will be our traversing pointer
     struct block_header *main_ptr = heapstart;
@@ -232,12 +292,9 @@ struct v_pointer vmalloc(size_t size)
     //we do not have a free block big enough
     if(min_free_header == NULL) {
         //this is where the fun begins
-
-
-
-
         struct v_pointer toRet = swap_alloc(size);
         next_id++;
+
         return toRet;
     }
 
