@@ -66,14 +66,18 @@ void test2() {
     assert(ptr5.addr != NULL);
 
     vminfo();
+    vmdestroy();
 }
 
 void test3() {
     vminit(4096);
 
     struct v_pointer ptr = vmalloc(1000);
+    printf("%x size status of newly allocated pointer \n\n", ((struct block_header*)(ptr.addr-1))->size_status);
+
+    
     char* p = dereference(ptr);
-    printf("%x Value of dereferencing ptr\n", p);
+    printf("%p Value of dereferencing ptr\n", p);
     printf("%d Value of v pointer address\n",((int*)ptr.addr)[0]);
     p[0] = 's';
     struct v_pointer ptr2 = vmalloc(1000);
@@ -90,6 +94,7 @@ void test3() {
     assert(p[0] == 'A');
 
     vminfo();
+    vmdestroy();
 }
 
 int main()
