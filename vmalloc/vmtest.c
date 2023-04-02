@@ -59,8 +59,9 @@ void test2() {
     struct v_pointer ptr2 = vmalloc(1000);
     struct v_pointer ptr3 = vmalloc(1000);
     struct v_pointer ptr4 = vmalloc(1000);
-
+    printf("%x Size status before calling vmalloc \n", BLKSZ(heapstart));
     struct v_pointer ptr5 = vmalloc(4000);
+    printf("%x Size status after \n", BLKSZ(heapstart));
 
     assert(ptr5.addr != NULL);
 

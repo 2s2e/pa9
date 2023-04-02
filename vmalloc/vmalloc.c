@@ -115,29 +115,37 @@ void add_block_to_file(struct block_header *header) {
     
 
     fseek(fp, 0, SEEK_SET);
+    printf("%x adding block to file\n", header->size_status);
+    
+    while(1) {
+        //check for reaching end
+        int c = fgetc(fp);
+        if(c == EOF) {
+            break;
+        }
+        fseek(fp, -1, SEEK_CUR);
 
-    while(!feof(fp)) {
-        fread(main_ptr, sizeof(struct block_header*), 1, fp);
-        printf("%x\n", main_ptr->size_status);
+
+        fread(main_ptr, sizeof(struct block_header), 1, fp);
+        if(main_ptr->size_status == NULL) {
+            break;
+        }
+        printf("reading %x, size %d \n", main_ptr->size_status, BLKSZ(main_ptr));
+
+        fseek(fp, -4, SEEK_CUR);
         char id = BLKID(main_ptr);
         size_t size = BLKSZ(main_ptr);
         
         //the file to evict already exists on the swapfile, update the contents
         if(id == BLKID(header)) {
-            fseek(fp, -4, SEEK_CUR);
             copy_to_file(header);
             return;
         }
-        fseek(fp, size-4, SEEK_CUR);
+        fseek(fp, size, SEEK_CUR);
     }
     //the file to exist is new, put it on the heap
     copy_to_file(header);
 }
-
-
-
-
-
 
 
 
@@ -189,10 +197,10 @@ void* dereference(struct v_pointer v) {
 
     //initialize our main pointer
     struct block_header* main_ptr = to_evict;
-    main_ptr += (BLKSZ(main_ptr) >> 2);
+    //main_ptr += (BLKSZ(main_ptr) >> 2);
 
     //while the space we've evicted isn't big enough, keep on evicting
-    while(eviction_size - 4 < size) {
+    while(eviction_size == 0 || eviction_size - 4 < size) {
         if(check_busy(main_ptr)) {
             add_block_to_file(main_ptr);
         }
@@ -203,8 +211,11 @@ void* dereference(struct v_pointer v) {
     //allocates our block
     alloc_block(to_evict, BLKSZ(header_buf), BLKID(header_buf));
     size_t leftovers = eviction_size - size;
-    set_next_block(to_evict, leftovers);
-    coalesce_next(to_evict);
+    struct block_header *next_header = (to_evict+(size >> 2));
+
+    //set our next block and coalesce
+    set_next_block(next_header, leftovers);
+    coalesce_next(next_header);
 
 
     //let's copy over our data
@@ -213,8 +224,6 @@ void* dereference(struct v_pointer v) {
     //this works, because at this point, our fp should be pointing at where our block header is
     fread(writer, size, 1, fp);
 
-    //avoid defragmentation
-    coalesce_next(to_evict);
 
     return to_evict+1;
 }
@@ -261,15 +270,16 @@ struct v_pointer swap_alloc(size_t size) {
 
         //initialize our main pointer
         main_ptr = to_evict;
-        main_ptr += (BLKSZ(main_ptr) >> 2);
+        //main_ptr += (BLKSZ(main_ptr) >> 2);
 
         //while the space we've evicted isn't big enough, keep on evicting
-        while(eviction_size - 4 < size) {
+        while(eviction_size == 0 || eviction_size - 4 < size) {
             if(check_busy(main_ptr)) {
                 add_block_to_file(main_ptr);
             }
             eviction_size += BLKSZ(main_ptr);
             main_ptr += (BLKSZ(main_ptr) >> 2);
+            printf("%d swapalloc eviction size\n", eviction_size);
         }
     }
     else {
@@ -280,8 +290,11 @@ struct v_pointer swap_alloc(size_t size) {
     //the true size of our block to allocate, header + payload rounded up 8
     size_t true_size = ROUND_UP(4+size, 8);
 
+    printf("%xBefore allocating\n", to_evict->size_status);
     //allocate that ****
     alloc_block(to_evict, true_size, next_id);
+    printf("%x After allocating\n", to_evict->size_status);
+
     
     //create our struct
     struct v_pointer toRet;
@@ -290,10 +303,16 @@ struct v_pointer swap_alloc(size_t size) {
 
     //don't forget to set up our free blocks
     size_t leftover = eviction_size - true_size;
-    set_next_block(to_evict, leftover);
+
+    struct block_header *next_header = (to_evict+(true_size >> 2));
+    set_next_block(next_header, leftover);
+
+    printf("%x After doing set next block\n", to_evict->size_status);
 
     //coalesce in case our block doesn't take up the whole space, we are coalescing the next block
-    coalesce_next(to_evict + (true_size/4));
+    coalesce_next(next_header);
+
+    printf("%x After doing all the fancy shit\n", to_evict->size_status);
 
     return toRet;
     
@@ -366,6 +385,7 @@ struct v_pointer vmalloc(size_t size)
 
     //allocate that ****
     alloc_block(min_free_header, true_size, next_id);
+    printf("%x\n", min_free_header->size_status);
 
     //have a reference point to the next free area
     struct block_header *next_header = (min_free_header+(true_size >> 2));
