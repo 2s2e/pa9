@@ -1,6 +1,6 @@
 #include <stdio.h>
-
 #include "vmlib.h"
+#include "assert.h"
 
 // Does a single allocation
 // void custom_heap1()
@@ -20,8 +20,7 @@ void dump_ref(char *ref_dump)
     vmdestroy();
 }
 
-int main()
-{
+void test1() {
     /**
      * Generate images and compare with reference.
      */
@@ -41,6 +40,9 @@ int main()
 
     struct v_pointer ptr2 = vmalloc(2000);
 
+    char* p2 = dereference(ptr);
+    p2[0] = 'A';
+
     struct v_pointer ptr3 = vmalloc(2000);
 
     vminfo(); // print out how the heap looks like at this point in time for easy visualization
@@ -48,5 +50,29 @@ int main()
     vmdump("dumps/s_image");
 
     vmdestroy(); // frees all memory allocated by vminit() or vmload()
+}
+
+void test2() {
+    vminit(4096);
+
+    struct v_pointer ptr = vmalloc(1000);
+    char* p = dereference(ptr);
+    p[0] = 'A';
+    struct v_pointer ptr2 = vmalloc(1000);
+    struct v_pointer ptr3 = vmalloc(1000);
+    struct v_pointer ptr4 = vmalloc(1000);
+
+    struct v_pointer ptr5 = vmalloc(4000);
+
+    assert(ptr5.addr != NULL);
+
+    char* p2 = dereference(ptr);
+    assert(p2[0] == 'A');
+
+}
+
+int main()
+{
+    test2();
     return 0;
 }
