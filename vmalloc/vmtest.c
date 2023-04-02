@@ -56,8 +56,6 @@ void test2() {
     vminit(4096);
 
     struct v_pointer ptr = vmalloc(1000);
-    char* p = dereference(ptr);
-    p[0] = 'A';
     struct v_pointer ptr2 = vmalloc(1000);
     struct v_pointer ptr3 = vmalloc(1000);
     struct v_pointer ptr4 = vmalloc(1000);
@@ -66,7 +64,29 @@ void test2() {
 
     assert(ptr5.addr != NULL);
 
+    vminfo();
+}
 
+void test3() {
+    vminit(4096);
+
+    struct v_pointer ptr = vmalloc(1000);
+    char* p = dereference(ptr);
+    p[0] = 'A';
+    struct v_pointer ptr2 = vmalloc(1000);
+    struct v_pointer ptr3 = vmalloc(1000);
+    struct v_pointer ptr4 = vmalloc(1000);
+
+    struct v_pointer ptr5 = vmalloc(4000);
+    char* p5 = dereference(ptr5);
+    p5[0] = 'B';
+
+    assert(ptr5.addr != NULL);
+
+    p = dereference(ptr);
+    assert(p[0] == 'A');
+
+    vminfo();
 }
 
 int main()

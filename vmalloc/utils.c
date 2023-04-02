@@ -21,6 +21,7 @@ void vminfo()
     printf(" %-6s %-7s %-8s %-8s %-7s\n", "#", "stat", "offset", "size", "prev");
     printf("---------------------------------------\n");
     while (block->size_status != VM_ENDMARK) {
+        printf("%x %x\n",VM_BLKSZMASK, block->size_status & VM_BLKSZMASK);
         blocksz = block->size_status & VM_BLKSZMASK;
         busy = block->size_status & VM_BUSY ? 1 : 0;
         prev_busy = block->size_status & VM_PREVBUSY ? 1 : 0;

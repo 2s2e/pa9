@@ -9,12 +9,7 @@
  * malloc returns NULL.
  */
 
- /*
-#define BLKSZ(b) ((b)->size_status & VM_BLKSZMASK)
-#define ROUND_UP(N, S) ((((N) + (S)-1) / (S)) * (S))
- */
-
-char next_id = 0;
+char next_id = 1;
 
 
 
@@ -107,22 +102,6 @@ void coalesce_next(struct block_header* block_ptr)
     /* TODO: PA 6 */
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-void* dereference(struct v_pointer v) {
-    return v.addr;
-}
-
 void copy_to_file(struct block_header *header) {
     //place the file pointer to the proper place first before calling this function
     fwrite(header, 1, BLKSZ(header), fp);
@@ -130,7 +109,7 @@ void copy_to_file(struct block_header *header) {
 
 void add_block_to_file(struct block_header *header) {
     //start at the beginning, keep going until you reach the end, then stop
-
+    printf("Adding block to file of size %d\n", BLKSZ(header));
     //our blockhead buffer
     struct block_header main_ptr[1];
     
@@ -155,6 +134,90 @@ void add_block_to_file(struct block_header *header) {
     copy_to_file(header);
 }
 
+
+
+
+
+
+
+
+
+
+
+
+void* dereference(struct v_pointer v) {
+    //pointer at whatever location v was originally pointing to
+    struct block_header* ptr = v.addr - 1;
+
+    if(BLKID(ptr) == v.id) {
+        return v.addr;
+    }
+
+    //the original location has been invaded, we start at the beginning
+    ptr = heapstart;
+
+     //our blockhead buffer
+    struct block_header header_buf[1];
+    
+    //start at the beginning
+    fseek(fp, 0, SEEK_SET);
+
+    while(!feof(fp)) {
+        fread(header_buf, sizeof(struct block_header*), 1, fp);
+        printf("%x\n", header_buf->size_status);
+
+        char id = BLKID(header_buf);
+        size_t size = BLKSZ(header_buf);
+        
+        //we've found our header
+        if(id == v.id) {
+            break;
+        }
+        //we've reached the end, and we haven't found our header, therefore it no longer exists
+        if(id == 0) {
+            return NULL;
+        }
+        fseek(fp, size-4, SEEK_CUR);
+    }
+
+
+    size_t size = BLKSZ(header_buf);
+
+    //first, we will evict all the necessary blocks to make space
+    struct block_header* to_evict = ptr;
+    size_t eviction_size = 0;
+
+    //initialize our main pointer
+    struct block_header* main_ptr = to_evict;
+    main_ptr += (BLKSZ(main_ptr) >> 2);
+
+    //while the space we've evicted isn't big enough, keep on evicting
+    while(eviction_size - 4 < size) {
+        if(check_busy(main_ptr)) {
+            add_block_to_file(main_ptr);
+        }
+        eviction_size += BLKSZ(main_ptr);
+        main_ptr += (BLKSZ(main_ptr) >> 2);
+    }
+
+    //allocates our block
+    alloc_block(to_evict, BLKSZ(header_buf), BLKID(header_buf));
+    size_t leftovers = eviction_size - size;
+    set_next_block(to_evict, leftovers);
+    coalesce_next(to_evict);
+
+
+    //let's copy over our data
+    char* writer = (char*)to_evict;
+
+    //this works, because at this point, our fp should be pointing at where our block header is
+    fread(writer, size, 1, fp);
+
+    //avoid defragmentation
+    coalesce_next(to_evict);
+
+    return to_evict+1;
+}
 
 struct v_pointer swap_alloc(size_t size) {
     struct block_header *main_ptr = heapstart;
@@ -222,7 +285,7 @@ struct v_pointer swap_alloc(size_t size) {
     
     //create our struct
     struct v_pointer toRet;
-    toRet.addr = to_evict;
+    toRet.addr = to_evict+1;
     toRet.id = next_id;
 
     //don't forget to set up our free blocks
