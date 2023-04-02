@@ -73,6 +73,8 @@ void test3() {
 
     struct v_pointer ptr = vmalloc(1000);
     char* p = dereference(ptr);
+    printf("%x Value of dereferencing ptr\n", p);
+    printf("%d Value of v pointer address\n",((int*)ptr.addr)[0]);
     p[0] = 'A';
     struct v_pointer ptr2 = vmalloc(1000);
     struct v_pointer ptr3 = vmalloc(1000);
@@ -92,6 +94,6 @@ void test3() {
 
 int main()
 {
-    test2();
+    test3();
     return 0;
 }
