@@ -60,6 +60,7 @@ void set_next_block(struct block_header *header, size_t leftover) {
     }
     else {
         //there is more space left, create a new free block
+        header->size_status = 0;
         header->size_status |= leftover;
         header->size_status |= 0b10;
         header->size_status &= ~(0b1);
@@ -98,8 +99,6 @@ void coalesce_next(struct block_header* block_ptr)
 
     set_footer(block_ptr);
     return;
-
-    /* TODO: PA 6 */
 }
 
 void copy_to_file(struct block_header *header) {
@@ -209,7 +208,7 @@ void* dereference(struct v_pointer v) {
     long proper_location = ftell(fp);
 
 
-    size_t size = BLKSZ(header_buf);
+    size_t new_size = BLKSZ(header_buf);
 
     //first, we will evict all the necessary blocks to make space
     struct block_header* to_evict = ptr;
@@ -220,7 +219,7 @@ void* dereference(struct v_pointer v) {
     //main_ptr += (BLKSZ(main_ptr) >> 2);
 
     //while the space we've evicted isn't big enough, keep on evicting
-    while(eviction_size == 0 || eviction_size - 4 < size) {
+    while(eviction_size == 0 || eviction_size - 4 < new_size) {
         if(BLKSZ(main_ptr) == 0) {exit(1);}
         if(check_busy(main_ptr)) {
             add_block_to_file(main_ptr);
@@ -231,8 +230,9 @@ void* dereference(struct v_pointer v) {
 
     //allocates our block
     alloc_block(to_evict, BLKSZ(header_buf), BLKID(header_buf));
-    size_t leftovers = eviction_size - size;
-    struct block_header *next_header = (to_evict+(size >> 2));
+    size_t leftovers = eviction_size - new_size;
+    printf("Dereference: leftovers is %d\n", leftovers);
+    struct block_header *next_header = (to_evict+(new_size >> 2));
 
     //set our next block and coalesce
     set_next_block(next_header, leftovers);
@@ -242,11 +242,11 @@ void* dereference(struct v_pointer v) {
     //let's copy over our data
     char* writer = (char*)to_evict;
 
-    printf("Dereference: writing %d bytes into writer\n", size);
+    printf("Dereference: writing %d bytes into writer\n", new_size);
     //this works, because at this point, our fp should be pointing at where our block header is, or so i thought
     printf("\nRight before reading, fp curently pointing at %ld\n\n", ftell(fp));
     fseek(fp, proper_location, SEEK_SET);
-    size_t num_read = fread(writer, 1, size, fp);
+    size_t num_read = fread(writer, 1, new_size, fp);
     printf("Read %d bytes\n\n", num_read);
 
 
