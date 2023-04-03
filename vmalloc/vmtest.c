@@ -73,32 +73,42 @@ void test3() {
     vminit(4096);
 
     struct v_pointer ptr = vmalloc(1000);
-    printf("%x size status of newly allocated pointer \n\n", ((struct block_header*)(ptr.addr-1))->size_status);
+    printf("%x size status of newly allocated pointer \n\n", ((struct block_header*)(ptr.addr)-1)->size_status);
 
     
     char* p = dereference(ptr);
     printf("%p Value of dereferencing ptr\n", p);
     printf("%d Value of v pointer address\n",((int*)ptr.addr)[0]);
-    p[0] = 's';
+    p[0] = 'A';
     struct v_pointer ptr2 = vmalloc(1000);
     struct v_pointer ptr3 = vmalloc(1000);
     struct v_pointer ptr4 = vmalloc(1000);
+    
+    vminfo();
+
 
     struct v_pointer ptr5 = vmalloc(4000);
     char* p5 = dereference(ptr5);
     p5[0] = 'B';
 
+    vminfo();
+
     assert(ptr5.addr != NULL);
 
     p = dereference(ptr);
+    printf("p[0] = %c\n", p[0]);
+    vminfo();
+
     assert(p[0] == 'A');
 
-    vminfo();
     vmdestroy();
+
+    printf("(:");
 }
 
 int main()
 {
+    printf("The size of a void pointer in this architecture is: %zu \n", sizeof(void*));
     test3();
     return 0;
 }

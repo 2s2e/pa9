@@ -62,6 +62,7 @@ void set_next_block(struct block_header *header, size_t leftover) {
         //there is more space left, create a new free block
         header->size_status |= leftover;
         header->size_status |= 0b10;
+        header->size_status &= ~(0b1);
     }
 }
 
@@ -155,7 +156,7 @@ void add_block_to_file(struct block_header *header) {
 
 void* dereference(struct v_pointer v) {
     //pointer at whatever location v was originally pointing to
-    struct block_header* ptr = v.addr - 1;
+    struct block_header* ptr = (struct block_header*)v.addr - 1;
     printf("Dereference, at offset: %d\n", ptr - heapstart);
     printf("Dereference, v_pointer id is %x, ptr id is %x\n", v.id, BLKID(ptr));
     printf("Dereference, %x Size status before\n\n", ptr->size_status);
@@ -174,6 +175,7 @@ void* dereference(struct v_pointer v) {
     fseek(fp, 0, SEEK_SET);
 
     while(1) {
+        printf("\nfp curently pointing at %ld\n", ftell(fp));
         int c = fgetc(fp);
         if(c == EOF) {
             break;
@@ -186,20 +188,25 @@ void* dereference(struct v_pointer v) {
 
         char id = BLKID(header_buf);
         size_t size = BLKSZ(header_buf);
-        printf("deference while loop: id of %c and size of %d", id, size);
+        printf("deference while loop: id of %d and size of %d\n", id, size);
 
-        fseek(fp, size, SEEK_CUR);
         
         //we've found our header
         if(id == v.id) {
+            printf("\nDeferefence: Found the correct block in the file!\n\n");
             break;
         }
         //we've reached the end, and we haven't found our header, therefore it no longer exists
         if(id == 0) {
             return NULL;
         }
-        
+
+        fseek(fp, size, SEEK_CUR);
     }
+
+    printf("\nAfter, fp curently pointing at %ld\n\n", ftell(fp));
+
+    long proper_location = ftell(fp);
 
 
     size_t size = BLKSZ(header_buf);
@@ -235,11 +242,15 @@ void* dereference(struct v_pointer v) {
     //let's copy over our data
     char* writer = (char*)to_evict;
 
-    //this works, because at this point, our fp should be pointing at where our block header is
-    fread(writer, size, 1, fp);
+    printf("Dereference: writing %d bytes into writer\n", size);
+    //this works, because at this point, our fp should be pointing at where our block header is, or so i thought
+    printf("\nRight before reading, fp curently pointing at %ld\n\n", ftell(fp));
+    fseek(fp, proper_location, SEEK_SET);
+    size_t num_read = fread(writer, 1, size, fp);
+    printf("Read %d bytes\n\n", num_read);
 
 
-    return to_evict+1;
+    return (void*)(to_evict+1);
 }
 
 struct v_pointer swap_alloc(size_t size) {

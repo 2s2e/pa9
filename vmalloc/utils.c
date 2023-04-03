@@ -21,6 +21,7 @@ void vminfo()
     printf(" %-6s %-7s %-8s %-8s %-7s\n", "#", "stat", "offset", "size", "prev");
     printf("---------------------------------------\n");
     while (block->size_status != VM_ENDMARK) {
+        
         blocksz = BLKSZ(block);
         busy = block->size_status & VM_BUSY ? 1 : 0;
         prev_busy = block->size_status & VM_PREVBUSY ? 1 : 0;
@@ -34,6 +35,7 @@ void vminfo()
         }
         totalsz += blocksz;
         block = (struct block_header *)((char *)block + blocksz);
+        if(block->size_status != VM_ENDMARK && BLKSZ(block) == 0) {exit(1);}
     }
     printf(" %-6s %-7s %-8d %-8s %-7s\n", "END", "N/A", BLKOFF(block), "N/A", "N/A");
     printf("---------------------------------------\n");
