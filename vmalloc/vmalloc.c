@@ -160,8 +160,11 @@ void* dereference(struct v_pointer v) {
     printf("Dereference, v_pointer id is %x, ptr id is %x\n", v.id, BLKID(ptr));
     printf("Dereference, %x Size status before\n\n", ptr->size_status);
 
-    if(BLKID(ptr) == v.id) {
+    if(BLKID(ptr) == v.id && check_busy(ptr)) {
         return v.addr;
+    }
+    else if(!check_busy(ptr)) {
+        return NULL;
     }
 
     //the original location has been invaded, we start at the beginning
@@ -177,7 +180,7 @@ void* dereference(struct v_pointer v) {
         printf("\nfp curently pointing at %ld\n", ftell(fp));
         int c = fgetc(fp);
         if(c == EOF) {
-            break;
+            return NULL;
         }
         fseek(fp, -1, SEEK_CUR);
 

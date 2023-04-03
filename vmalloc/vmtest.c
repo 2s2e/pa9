@@ -20,38 +20,24 @@ void dump_ref(char *ref_dump)
     vmdestroy();
 }
 
+//sanity check test, tests if dereferencing on a v_pointer that doesn't go into the file works
 void test1() {
-    /**
-     * Generate images and compare with reference.
-     */
-    // comment these out if you just want to test on your own
-    // gen_images();
-    // dump_ref("dumps/ref_image6"); // change to correspond to the heap dump you want
 
-    /* Write your own tests here */
-    // initialize the vm: 
-    // size must be a multiple of 4096 due to how the OS allocates memory
     vminit(4096);
-    // comment out vminit() above and uncomment following line to load a heap dump instead of
-    // initializating an empty heap 
-    //vmload("dumps/ref_image2");
 
-    struct v_pointer ptr = vmalloc(2000); // try calling vmalloc once.
+    struct v_pointer v_ptr = vmalloc(4); // try calling vmalloc once.
 
-    struct v_pointer ptr2 = vmalloc(2000);
+    int* p = dereference(v_ptr);
+    *p = 5;
 
-    char* p2 = dereference(ptr);
-    p2[0] = 'A';
+    int* p2 = dereference(v_ptr);
+    assert(*p2 == 5);
 
-    struct v_pointer ptr3 = vmalloc(2000);
-
-    vminfo(); // print out how the heap looks like at this point in time for easy visualization
-
-    vmdump("dumps/s_image");
-
-    vmdestroy(); // frees all memory allocated by vminit() or vmload()
+    vminfo(); 
+    vmdestroy(); 
 }
 
+//checks if the program is able to allocate space for a block that wouldn't fit onto the heap
 void test2() {
     vminit(4096);
 
@@ -70,6 +56,7 @@ void test2() {
     printf("(:");
 }
 
+//checks if content in evicted blocks can still be accessed 
 void test3() {
     vminit(4096);
 
@@ -93,14 +80,16 @@ void test3() {
 
     p = dereference(ptr);
     printf("p[0] = %c\n", p[0]);
-    vminfo();
 
     assert(p[0] == 'A');
+
+    vminfo();
 
     vmdestroy();
 
 }
 
+//more advanced testing to see if dereferencing works after multiple evictions for a single vmalloc
 void test4() {
     vminit(4096);
 
@@ -157,7 +146,12 @@ void test4() {
     printf("4 p[0] = %c\n", p[0]);
     assert(p[0] == 'D');
 
-    printf("It worked right?\n");
+    p5 = dereference(ptr5);
+    for(int i = 0; i < 4000; i++) {
+        assert(p5[i] == 'Z');
+    }
+
+    vminfo();
 
     vmdestroy();
 }
@@ -204,9 +198,45 @@ void test_2d_array() {
     vmdestroy();
 }
 
+//sanity check for a single vmfree and vmalloc
+void test_free_1() {
+    vminit(4096);
+
+    struct v_pointer v_ptr = vmalloc(4);
+    vmfree(v_ptr);
+
+    struct v_pointer v_ptr2 = vmalloc(4);
+
+    //after the first block, the heap is empty, therefore our second block should be allocated at the beginning
+    assert(v_ptr2.addr == heapstart+1);
+
+    vminfo();
+    vmdestroy();
+}
+
+void test_free_2() {
+    vminit(4096);
+
+    struct v_pointer v_ptr = vmalloc(1000);
+
+    assert(dereference(v_ptr) != NULL);
+
+    struct v_pointer v_ptr2 = vmalloc(4000);
+
+    assert(dereference(v_ptr) != NULL);
+
+    vmfree(v_ptr);
+
+    assert(dereference(v_ptr) == NULL);
+    
+
+    vminfo();
+    vmdestroy();
+}
+
 
 int main()
 {
-    test_2d_array();
+    test_free_2();
     return 0;
 }
