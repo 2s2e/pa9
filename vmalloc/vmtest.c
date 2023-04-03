@@ -162,8 +162,51 @@ void test4() {
     vmdestroy();
 }
 
+void test_2d_array() {
+    vminit(4096);
+    //we will attempt to simulate a dynamically allocated 2d array
+
+    struct v_pointer mat;
+
+    mat = vmalloc(sizeof(struct v_pointer) * 5);
+
+    struct v_pointer* mat_p = dereference(mat);
+    int* arr_p; //we will use this to store the reference to each integer array
+
+    for(int i = 0; i < 5; i++) {
+        //arr is an array of integers
+        mat_p[i] = vmalloc(sizeof(int) * (i+1));
+        arr_p = dereference(mat_p[i]);
+        for(int j = 0; j < i+1; j++) {
+            arr_p[j] = j;
+        }
+    }
+
+    struct v_pointer huge_block = vmalloc(4080);
+
+
+
+    //mat_p is of type v_pointer[]
+    mat_p = dereference(mat);
+    struct v_pointer arr = mat_p[2];
+    arr_p = dereference(arr);
+    int val = arr_p[2];
+
+    assert(val == 2);
+
+    mat_p = dereference(mat);
+    arr = mat_p[4];
+    arr_p = dereference(arr);
+    val = arr_p[0];
+
+    assert(val == 0);
+
+    vmdestroy();
+}
+
+
 int main()
 {
-    test4();
+    test_2d_array();
     return 0;
 }
