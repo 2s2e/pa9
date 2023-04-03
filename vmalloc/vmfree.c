@@ -66,8 +66,65 @@ void f_set_footer(struct block_header *header) {
     footer->size = BLKSZ(header);
 }
 
+void vmfree(struct v_pointer v) {
+    struct block_header* block_ptr = (struct block_header*)(v.addr);
+    block_ptr -= 1;
 
-void vmfree(void *ptr)
+    //let's first free our pointer on the heap
+    if(BLKID(block_ptr) == v.id) {
+        vmfree_normal(v.addr);
+    }
+    else {
+        //let's find the block with the proper id
+        block_ptr = heapstart;
+        while(block_ptr != VM_ENDMARK) {
+            if(BLKID(block_ptr) == v.id) {
+                vmfree_normal(v.addr);
+                return;
+            }
+
+            block_ptr += BLKSZ(block_ptr);
+        }
+    }
+    
+    //remember, we still have to account for the chunk
+    struct block_header main_ptr[1];
+    
+
+    fseek(fp, 0, SEEK_SET);
+    
+    while(1) {
+        //check for reaching end
+        int c = fgetc(fp);
+        if(c == EOF) {
+            break;
+        }
+        fseek(fp, -1, SEEK_CUR);
+
+
+        fread(main_ptr, sizeof(struct block_header), 1, fp);
+        fseek(fp, -4, SEEK_CUR);
+
+        //now main_ptr contains the block header stored in the file
+
+        char id = BLKID(main_ptr);
+        size_t size = BLKSZ(main_ptr);
+
+        char id_zero[] = '\0';
+        
+        //the file to evict already exists on the swapfile, update the contents
+        if(id == v.id) {
+            fwrite(id_zero, 1, 1, fp);
+            return;
+        }
+
+        fseek(fp, size, SEEK_CUR);
+    }
+    
+}
+
+
+void vmfree_normal(void *ptr)
 {
     struct block_header* block_ptr = (struct block_header*)ptr;
     block_ptr -= 1;

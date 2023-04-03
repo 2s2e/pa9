@@ -25,7 +25,7 @@ void vmdestroy();
 
 struct v_pointer vmalloc(size_t size);
 
-void vmfree(void *ptr);
+void vmfree(struct v_pointer v);
 
 /* Print out the heap structure */
 void vminfo();
