@@ -67,31 +67,27 @@ void test2() {
 
     vminfo();
     vmdestroy();
+    printf("(:");
 }
 
 void test3() {
     vminit(4096);
 
     struct v_pointer ptr = vmalloc(1000);
-    printf("%x size status of newly allocated pointer \n\n", ((struct block_header*)(ptr.addr)-1)->size_status);
+    //printf("%x size status of newly allocated pointer \n\n", ((struct block_header*)(ptr.addr)-1)->size_status);
 
     
     char* p = dereference(ptr);
-    printf("%p Value of dereferencing ptr\n", p);
-    printf("%d Value of v pointer address\n",((int*)ptr.addr)[0]);
+    //printf("%p Value of dereferencing ptr\n", p);
+    //printf("%d Value of v pointer address\n",((int*)ptr.addr)[0]);
     p[0] = 'A';
     struct v_pointer ptr2 = vmalloc(1000);
     struct v_pointer ptr3 = vmalloc(1000);
     struct v_pointer ptr4 = vmalloc(1000);
-    
-    vminfo();
-
 
     struct v_pointer ptr5 = vmalloc(4000);
     char* p5 = dereference(ptr5);
     p5[0] = 'B';
-
-    vminfo();
 
     assert(ptr5.addr != NULL);
 
@@ -103,12 +99,71 @@ void test3() {
 
     vmdestroy();
 
-    printf("(:");
+}
+
+void test4() {
+    vminit(4096);
+
+    char* p;
+
+    struct v_pointer ptr = vmalloc(1000);
+    
+    p = dereference(ptr);
+    p[0] = 'A';
+
+    struct v_pointer ptr2 = vmalloc(1000);
+
+    p = dereference(ptr2);
+    p[0] = 'B';
+
+    struct v_pointer ptr3 = vmalloc(1000);
+
+    p = dereference(ptr3);
+    p[0] = 'C';
+
+    struct v_pointer ptr4 = vmalloc(1000);
+
+    p = dereference(ptr4);
+    p[0] = 'D';
+
+    vminfo();
+
+
+    struct v_pointer ptr5 = vmalloc(4000);
+    char* p5 = dereference(ptr5);
+    
+    for(int i = 0; i < 4000; i++) {
+        p5[i] = 'Z';
+    }
+
+    vminfo();
+
+
+    assert(ptr5.addr != NULL);
+
+    p = dereference(ptr);
+    printf("1 p[0] = %c\n", p[0]);
+    assert(p[0] == 'A');
+
+    p = dereference(ptr2);
+    printf("2 p[0] = %c\n", p[0]);
+    assert(p[0] == 'B');
+
+    p = dereference(ptr3);
+    printf("3 p[0] = %c\n", p[0]);
+    assert(p[0] == 'C');
+
+    p = dereference(ptr4);
+    printf("4 p[0] = %c\n", p[0]);
+    assert(p[0] == 'D');
+
+    printf("It worked right?\n");
+
+    vmdestroy();
 }
 
 int main()
 {
-    printf("The size of a void pointer in this architecture is: %zu \n", sizeof(void*));
-    test3();
+    test4();
     return 0;
 }
