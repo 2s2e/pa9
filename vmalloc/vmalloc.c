@@ -163,7 +163,7 @@ void* dereference(struct v_pointer v) {
     if(BLKID(ptr) == v.id && check_busy(ptr)) {
         return v.addr;
     }
-    else if(!check_busy(ptr)) {
+    else if(BLKID(ptr) == v.id && !check_busy(ptr)) {
         return NULL;
     }
 

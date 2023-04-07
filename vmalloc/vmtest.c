@@ -228,7 +228,66 @@ void test_free_2() {
     vmfree(v_ptr);
 
     assert(dereference(v_ptr) == NULL);
-    
+
+    vminfo();
+    vmdestroy();
+}
+
+void test_free_2d_array() {
+    vminit(4096);
+    //we will attempt to simulate a dynamically allocated 2d array
+
+    struct v_pointer mat;
+
+    mat = vmalloc(sizeof(struct v_pointer) * 5);
+
+    struct v_pointer* mat_p = dereference(mat);
+    int* arr_p; //we will use this to store the reference to each integer array
+
+    for(int i = 0; i < 5; i++) {
+        //arr is an array of integers
+        mat_p[i] = vmalloc(sizeof(int) * (i+1));
+        arr_p = dereference(mat_p[i]);
+        for(int j = 0; j < i+1; j++) {
+            arr_p[j] = j;
+        }
+    }
+
+    struct v_pointer huge_block = vmalloc(4080);
+
+
+
+    //mat_p is of type v_pointer[]
+    mat_p = dereference(mat);
+    struct v_pointer arr = mat_p[2];
+    arr_p = dereference(arr);
+    int val = arr_p[2];
+
+    assert(val == 2);
+
+    mat_p = dereference(mat);
+    arr = mat_p[4];
+    arr_p = dereference(arr);
+    val = arr_p[0];
+
+    assert(val == 0);
+
+    //now we free everything
+    printf("deferencing mat\n");
+    mat_p = dereference(mat);
+
+    for(int i = 0; i < 5; i++) {
+        //arr is an array of integers
+        vmfree(mat_p[i]);
+        assert(dereference(mat_p[i]) == NULL);
+        printf("Dereferencing %p\n", mat_p[i].addr);
+    }
+    vmfree(mat);
+
+    vmfree(huge_block);
+
+    assert(dereference(huge_block) == NULL);
+    assert(dereference(mat) == NULL);
 
     vminfo();
     vmdestroy();
@@ -237,6 +296,6 @@ void test_free_2() {
 
 int main()
 {
-    test_free_2();
+    test4();
     return 0;
 }
