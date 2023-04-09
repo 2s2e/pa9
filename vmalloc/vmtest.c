@@ -277,6 +277,8 @@ void test_free_2d_array() {
     mat_p = dereference(mat);
 
     for(int i = 0; i < 5; i++) {
+        vminfo();
+        printf("First call of free\n");
         //arr is an array of integers
         vmfree(mat_p[i]);
         assert(dereference(mat_p[i]) == NULL);
@@ -296,6 +298,6 @@ void test_free_2d_array() {
 
 int main()
 {
-    test4();
+    test_free_2d_array();
     return 0;
 }

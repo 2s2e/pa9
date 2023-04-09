@@ -139,12 +139,17 @@ void vmfree(struct v_pointer v) {
         //let's find the block with the proper id
         block_ptr = heapstart;
         while(block_ptr->size_status != VM_ENDMARK) {
+            printf("vmfree: current size status and block size of block pointer: %x  %d\n", block_ptr->size_status, BLKSZ(block_ptr));
+            printf("vmfree: location of block pointer: %d\n\n", block_ptr - heapstart);
             if(BLKID(block_ptr) == v.id) {
                 vmfree_normal(block_ptr);
                 return;
             }
-
-            block_ptr += BLKSZ(block_ptr);
+            if(BLKSZ(block_ptr) == 0) {
+        
+                exit(1);
+            }
+            block_ptr += (BLKSZ(block_ptr) / 4);
         }
     }
     
