@@ -223,7 +223,11 @@ void* dereference(struct v_pointer v) {
 
     //while the space we've evicted isn't big enough, keep on evicting
     while(eviction_size == 0 || eviction_size - 4 < new_size) {
-        if(BLKSZ(main_ptr) == 0) {exit(1);}
+
+        //this part means that we have run out of space and hit the endmark, abort
+        if(main_ptr->size_status == VM_ENDMARK) {break;}
+        
+        if(BLKSZ(main_ptr) == 0) {exit(3);}
         if(check_busy(main_ptr)) {
             add_block_to_file(main_ptr);
         }
@@ -300,7 +304,7 @@ struct v_pointer swap_alloc(size_t size) {
 
         //while the space we've evicted isn't big enough, keep on evicting
         while(eviction_size == 0 || eviction_size - 4 < size) {
-            if(BLKSZ(main_ptr) == 0) {exit(1);}
+            if(BLKSZ(main_ptr) == 0) {exit(2);}
             if(check_busy(main_ptr)) {
                 add_block_to_file(main_ptr);
             }

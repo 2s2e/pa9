@@ -300,6 +300,39 @@ void test_free_2d_array() {
 void usage_demo() {
     vminit(4096);
 
+    //create a custom pointer with vmalloc
+    struct v_pointer i_vptr = vmalloc(sizeof(int));
+    //call dereference on our v_pointer to get an actual usable pointer
+    int* ptr = (int *)dereference(i_vptr);
+
+    //now as long as no more calls to dereference are made, ptr can be used as a normal pointer
+    *ptr = 500;
+    printf("%d\n",*ptr);
+
+    *ptr = 1000;
+    printf("%d\n",*ptr);
+
+    //this works even if we run out of heap space
+    struct v_pointer c_vptr = vmalloc(4084);
+
+    char* c_ptr = (char *)dereference(c_vptr);
+    c_ptr[0] = 'a';
+    c_ptr[1] = 'b';
+
+    ptr = (int *)dereference(i_vptr);
+    printf("%d\n",*ptr);
+
+    c_ptr = (char *)dereference(c_vptr);
+    printf("%s", c_ptr);
+    printf("\n");
+    
+
+    //free
+    vmfree(i_vptr);
+    vmfree(c_vptr);
+
+
+
     vminfo();
     vmdestroy();
 }
@@ -318,6 +351,6 @@ void run_all_tests() {
 
 int main()
 {
-    run_all_tests();
+    usage_demo();
     return 0;
 }
