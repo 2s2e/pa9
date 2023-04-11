@@ -47,7 +47,7 @@ void alloc_block(struct block_header *header, size_t true_size, char id) {
     size_t int_id = id;
     int_id = int_id << 24;
     header->size_status |= int_id;
-    printf("%x alloc_block, size status of block allocated, size is %d, id is %d\n\n", header->size_status, BLKSZ(header), BLKID(header));
+    //printf("%x alloc_block, size status of block allocated, size is %d, id is %d\n\n", header->size_status, BLKSZ(header), BLKID(header));
 
 }
 
@@ -108,13 +108,13 @@ void copy_to_file(struct block_header *header) {
 
 void add_block_to_file(struct block_header *header) {
     //start at the beginning, keep going until you reach the end, then stop
-    printf("Adding to file a block of size %d\n", BLKSZ(header));
+    //printf("Adding to file a block of size %d\n", BLKSZ(header));
     //our blockhead buffer
     struct block_header main_ptr[1];
     
 
     fseek(fp, 0, SEEK_SET);
-    printf("%x adding block to file\n\n", header->size_status);
+    //printf("%x adding block to file\n\n", header->size_status);
     
     while(1) {
         //check for reaching end
@@ -129,7 +129,7 @@ void add_block_to_file(struct block_header *header) {
         if(main_ptr->size_status == NULL) {
             break;
         }
-        printf("add_block_to_file: reading %x, size %d \n", main_ptr->size_status, BLKSZ(main_ptr));
+        //printf("add_block_to_file: reading %x, size %d \n", main_ptr->size_status, BLKSZ(main_ptr));
 
         fseek(fp, -4, SEEK_CUR);
         char id = BLKID(main_ptr);
@@ -156,9 +156,9 @@ void add_block_to_file(struct block_header *header) {
 void* dereference(struct v_pointer v) {
     //pointer at whatever location v was originally pointing to
     struct block_header* ptr = (struct block_header*)v.addr - 1;
-    printf("Dereference, at offset: %d\n", ptr - heapstart);
-    printf("Dereference, v_pointer id is %x, ptr id is %x\n", v.id, BLKID(ptr));
-    printf("Dereference, %x Size status before\n\n", ptr->size_status);
+    // printf("Dereference, at offset: %d\n", ptr - heapstart);
+    // printf("Dereference, v_pointer id is %x, ptr id is %x\n", v.id, BLKID(ptr));
+    // printf("Dereference, %x Size status before\n\n", ptr->size_status);
 
     if(BLKID(ptr) == v.id && check_busy(ptr)) {
         return v.addr;
@@ -177,7 +177,7 @@ void* dereference(struct v_pointer v) {
     fseek(fp, 0, SEEK_SET);
 
     while(1) {
-        printf("\nfp curently pointing at %ld\n", ftell(fp));
+        //printf("\nfp curently pointing at %ld\n", ftell(fp));
         int c = fgetc(fp);
         if(c == EOF) {
             return NULL;
@@ -190,12 +190,12 @@ void* dereference(struct v_pointer v) {
 
         char id = BLKID(header_buf);
         size_t size = BLKSZ(header_buf);
-        printf("deference while loop: id of %d and size of %d\n", id, size);
+        //printf("deference while loop: id of %d and size of %d\n", id, size);
 
         
         //we've found our header
         if(id == v.id) {
-            printf("\nDeferefence: Found the correct block in the file!\n\n");
+            //printf("\nDeferefence: Found the correct block in the file!\n\n");
             break;
         }
         //we've reached the end, and we haven't found our header, therefore it no longer exists
@@ -206,7 +206,7 @@ void* dereference(struct v_pointer v) {
         fseek(fp, size, SEEK_CUR);
     }
 
-    printf("\nAfter, fp curently pointing at %ld\n\n", ftell(fp));
+    //printf("\nAfter, fp curently pointing at %ld\n\n", ftell(fp));
 
     long proper_location = ftell(fp);
 
@@ -234,7 +234,7 @@ void* dereference(struct v_pointer v) {
     //allocates our block
     alloc_block(to_evict, BLKSZ(header_buf), BLKID(header_buf));
     size_t leftovers = eviction_size - new_size;
-    printf("Dereference: leftovers is %d\n", leftovers);
+    //printf("Dereference: leftovers is %d\n", leftovers);
     struct block_header *next_header = (to_evict+(new_size >> 2));
 
     //set our next block and coalesce
@@ -245,12 +245,13 @@ void* dereference(struct v_pointer v) {
     //let's copy over our data
     char* writer = (char*)to_evict;
 
-    printf("Dereference: writing %d bytes into writer\n", new_size);
+    //printf("Dereference: writing %d bytes into writer\n", new_size);
+    
     //this works, because at this point, our fp should be pointing at where our block header is, or so i thought
-    printf("\nRight before reading, fp curently pointing at %ld\n\n", ftell(fp));
+    //printf("\nRight before reading, fp curently pointing at %ld\n\n", ftell(fp));
     fseek(fp, proper_location, SEEK_SET);
     size_t num_read = fread(writer, 1, new_size, fp);
-    printf("Read %d bytes\n\n", num_read);
+    //printf("Read %d bytes\n\n", num_read);
 
 
     return (void*)(to_evict+1);
@@ -305,7 +306,7 @@ struct v_pointer swap_alloc(size_t size) {
             }
             eviction_size += BLKSZ(main_ptr);
             main_ptr += (BLKSZ(main_ptr) >> 2);
-            printf("%d swapalloc, eviction_size\n", eviction_size);
+           // printf("%d swapalloc, eviction_size\n", eviction_size);
         }
     }
     else {
@@ -316,10 +317,10 @@ struct v_pointer swap_alloc(size_t size) {
     //the true size of our block to allocate, header + payload rounded up 8
     size_t true_size = ROUND_UP(4+size, 8);
 
-    printf("%x swapalloc, size status of to _evict before allocating\n", to_evict->size_status);
+    //printf("%x swapalloc, size status of to _evict before allocating\n", to_evict->size_status);
     //allocate that ****
     alloc_block(to_evict, true_size, next_id);
-    printf("%x swapalloc, size status of to _evict after allocating\n\n", to_evict->size_status);
+    //printf("%x swapalloc, size status of to _evict after allocating\n\n", to_evict->size_status);
 
     
     //create our struct
@@ -333,12 +334,12 @@ struct v_pointer swap_alloc(size_t size) {
     struct block_header *next_header = (to_evict+(true_size >> 2));
     set_next_block(next_header, leftover);
 
-    printf("%x swap alloc, to_evict after setting the next block\n", to_evict->size_status);
+    //printf("%x swap alloc, to_evict after setting the next block\n", to_evict->size_status);
 
     //coalesce in case our block doesn't take up the whole space, we are coalescing the next block
     coalesce_next(next_header);
 
-    printf("%x swap alloc, to_evict after coalescing the next header\n", to_evict->size_status);
+    //printf("%x swap alloc, to_evict after coalescing the next header\n", to_evict->size_status);
 
     return toRet;
     
@@ -354,7 +355,7 @@ struct v_pointer vmalloc(size_t size)
     one for setting the previous status bit
     */
     if(next_id == 255) {
-        printf("Maximum number of allocs reached");
+        //printf("Maximum number of allocs reached");
         exit(1);
     }
 
@@ -407,7 +408,7 @@ struct v_pointer vmalloc(size_t size)
 
     //allocate that ****
     alloc_block(min_free_header, true_size, next_id);
-    printf("%x vmalloc, our min_free_header after alloc block \n\n", min_free_header->size_status);
+    //printf("%x vmalloc, our min_free_header after alloc block \n\n", min_free_header->size_status);
 
     //have a reference point to the next free area
     struct block_header *next_header = (min_free_header+(true_size >> 2));
@@ -418,9 +419,10 @@ struct v_pointer vmalloc(size_t size)
     //random comments
 
     struct v_pointer toRet = { min_free_header+1, next_id };
-    printf("%p %p %p values of min_free_header and toRet.addr, and toRet.addr-1 respectively\n", min_free_header, toRet.addr, toRet.addr-4);
-    printf("%x, vmalloc, final check of size status of block being returned\n", ((struct block_header*)(toRet.addr)-1)->size_status);
-    printf("%x, min_free_header size status for reference\n", min_free_header->size_status);
+
+    //printf("%p %p %p values of min_free_header and toRet.addr, and toRet.addr-1 respectively\n", min_free_header, toRet.addr, toRet.addr-4);
+    //printf("%x, vmalloc, final check of size status of block being returned\n", ((struct block_header*)(toRet.addr)-1)->size_status);
+    //printf("%x, min_free_header size status for reference\n", min_free_header->size_status);
 
     next_id++;
     return toRet;

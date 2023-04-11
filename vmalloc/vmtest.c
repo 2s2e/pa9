@@ -45,15 +45,15 @@ void test2() {
     struct v_pointer ptr2 = vmalloc(1000);
     struct v_pointer ptr3 = vmalloc(1000);
     struct v_pointer ptr4 = vmalloc(1000);
-    printf("%x Size status before calling vmalloc \n", BLKSZ(heapstart));
+    //printf("%x Size status before calling vmalloc \n", BLKSZ(heapstart));
     struct v_pointer ptr5 = vmalloc(4000);
-    printf("%x Size status after \n", BLKSZ(heapstart));
+    //printf("%x Size status after \n", BLKSZ(heapstart));
 
     assert(ptr5.addr != NULL);
 
     vminfo();
     vmdestroy();
-    printf("(:");
+    //printf("(:");
 }
 
 //checks if content in evicted blocks can still be accessed 
@@ -115,7 +115,7 @@ void test4() {
     p = dereference(ptr4);
     p[0] = 'D';
 
-    vminfo();
+    //vminfo();
 
 
     struct v_pointer ptr5 = vmalloc(4000);
@@ -125,25 +125,25 @@ void test4() {
         p5[i] = 'Z';
     }
 
-    vminfo();
+    //vminfo();
 
 
     assert(ptr5.addr != NULL);
 
     p = dereference(ptr);
-    printf("1 p[0] = %c\n", p[0]);
+    //printf("1 p[0] = %c\n", p[0]);
     assert(p[0] == 'A');
 
     p = dereference(ptr2);
-    printf("2 p[0] = %c\n", p[0]);
+    //printf("2 p[0] = %c\n", p[0]);
     assert(p[0] == 'B');
 
     p = dereference(ptr3);
-    printf("3 p[0] = %c\n", p[0]);
+    //printf("3 p[0] = %c\n", p[0]);
     assert(p[0] == 'C');
 
     p = dereference(ptr4);
-    printf("4 p[0] = %c\n", p[0]);
+    //printf("4 p[0] = %c\n", p[0]);
     assert(p[0] == 'D');
 
     p5 = dereference(ptr5);
@@ -151,7 +151,7 @@ void test4() {
         assert(p5[i] == 'Z');
     }
 
-    vminfo();
+    //vminfo();
 
     vmdestroy();
 }
@@ -273,16 +273,16 @@ void test_free_2d_array() {
     assert(val == 0);
 
     //now we free everything
-    printf("deferencing mat\n");
+    //printf("deferencing mat\n");
     mat_p = dereference(mat);
 
     for(int i = 0; i < 5; i++) {
-        vminfo();
-        printf("First call of free\n");
+        //vminfo();
+        //printf("First call of free\n");
         //arr is an array of integers
         vmfree(mat_p[i]);
         assert(dereference(mat_p[i]) == NULL);
-        printf("Dereferencing %p\n", mat_p[i].addr);
+        //printf("Dereferencing %p\n", mat_p[i].addr);
     }
     vmfree(mat);
 
@@ -291,13 +291,33 @@ void test_free_2d_array() {
     assert(dereference(huge_block) == NULL);
     assert(dereference(mat) == NULL);
 
+    printf("All tests passed\n");
+
+    vminfo();
+    vmdestroy();
+}
+
+void usage_demo() {
+    vminit(4096);
+
     vminfo();
     vmdestroy();
 }
 
 
+void run_all_tests() {
+    test1();
+    test2();
+    test3();
+    test4();
+    test_2d_array();
+    test_free_1();
+    test_free_2();
+    test_free_2d_array();
+}
+
 int main()
 {
-    test_free_2d_array();
+    run_all_tests();
     return 0;
 }
