@@ -226,7 +226,7 @@ void* dereference(struct v_pointer v) {
 
         //this part means that we have run out of space and hit the endmark, abort
         if(main_ptr->size_status == VM_ENDMARK) {break;}
-        
+
         if(BLKSZ(main_ptr) == 0) {exit(3);}
         if(check_busy(main_ptr)) {
             add_block_to_file(main_ptr);
@@ -350,8 +350,10 @@ struct v_pointer swap_alloc(size_t size) {
 }
 
 struct v_pointer vmalloc(size_t size)
-{
-
+{   
+    if(ROUND_UP(4+size, 8) > heapsize - 8) {
+        exit(1);
+    }
     /*
     one for getting block size
     one for getting a pointer to next block
