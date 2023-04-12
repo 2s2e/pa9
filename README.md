@@ -13,6 +13,6 @@ A usage demo along with written tests can be found in the vmtest.c file.
 * If there is enough space left in the heap to allocate a new block or to swap back a block from the swapfile, that space is used.
 Otherwise, space is evicted starting from the beginning of the heap, moving as many blocks to the swapfile as necessary.
 
-## Limitation
+## Limitations
 * As a result of this, there can only be 254 calls to vmalloc before the undefined behavior occurs, and thus the program is set to crash when the 255th call is made.
 * Furthermore, because the last 8 bits are used to store this id, the maximum size for a block becomes 2^24 bytes. 
